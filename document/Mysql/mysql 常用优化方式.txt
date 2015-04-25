@@ -1,0 +1,52 @@
+一、mysql 索引优化
+1):单表数据百万量级,记录分页性能如何优化。
+	limit 查询语句的查询时间是和起始记录的位置成正比。
+	解决方法:利用表的覆盖索引、查询索引
+	自增的id是主键索引。
+	select id from product limit 866613, 20
+	那么如果我们也要查询所有列，有两种方法，一种是id>=的形式，另一种就是利用join，看下实际情况：
+	SELECT * FROM product WHERE ID > =(select id from product limit 866613, 1) limit 20
+	查询时间为0.2秒，简直是一个质的飞跃啊，哈哈
+2):mysql 组合索引
+  有组合查询的sql,尽量建立组合索引。
+  组合索引遵循最左优先原则:
+  组合索引的第一个字段必须出现在查询组句中，这个索引才会被用到。
+  下面情况都会用到索引
+  例如:order_index(a,b,c) 
+  where a=1,b=2,c=3;  
+  where a=1,c=3;
+  where a=1,b=3;
+  下面情况不会用到索引
+  where b=2,a=1;
+  where c=2,a=1;
+  where b=1,c=2;
+  
+3):mysql like 的查询优化;
+  1000万数据使用like 效率太低。
+  select tag from log where tag like '%www.%'; - 此SQL效率查询低下，
+  ------替代sql ----------------
+  select tag from log where  instr('tag','www.') >0;
+  select tag from log where  locate('tag','www.') >0;
+  也可以根据表结果使用find_in_set 对于 字段是用逗号分隔开
+   select * from tags where find_in_set('xiaow',tag); 
+4):mysql where like 语句是否能用到索引:
+  EXPLAIN select * from tags where tag like 'abc%'; 可以用到索引
+  EXPLAIN select * from tags where tag like '%abc'; 可以用到索引
+  EXPLAIN select * from tags where tag like '%abc%';不能用到索引
+ 
+二、mysql 的where 语句优化
+
+
+
+
+三、mysql(insert、update 、delete) 优化
+    1)insert 优化:
+	   如果同时从同一个客户端插入很多行，使用含多个VALUE的INSERT语句同时插入几行。这比使用单行INSERT语句快(在某些情况下快几倍)。
+	   例如:INSERT INTO a VALUES (1,23),(2,34),(4,33); bulk_insert_buffer_size 修改次参数
+
+三、mysql 的配置优化
+
+
+四、mysql 的主从负责原理:
+
+
